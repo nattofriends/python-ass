@@ -156,6 +156,7 @@ class ASSFile(object):
                 "Dialogue": Dialogue,
                 "Comment":  Comment,
                 "Picture":  Picture,
+                "Sound":    Sound,
                 "Movie":    Movie,
                 "Command":  Command
             })[type_name].parse(line, field_order))
@@ -442,6 +443,12 @@ class Picture(_Event):
     """ A picture event. Not widely supported.
     """
     TYPE = "Picture"
+
+
+class Sound(_Event):
+    """ A sound event. Not widely supported.
+    """
+    TYPE = "Sound"
 
 
 class Movie(_Event):
