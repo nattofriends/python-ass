@@ -7,7 +7,8 @@ setup(
     author='Tony Young',
     author_email='tony@rfw.name',
     keywords='ass subtitle substation alpha',
-    packages = ['ass'],
+    py_modules = ['ass'],
+    url = 'http://github.com/rfw/python-ass',
     license = 'MIT',
     classifiers = [
     'Development Status :: 4 - Beta',
