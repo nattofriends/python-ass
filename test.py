@@ -17,7 +17,7 @@ class TestEverything(unittest.TestCase):
         out = StringIO()
         af.dump_file(out)
 
-        self.assertEquals(out.getvalue().strip(), contents.strip())
+        self.assertEqual(out.getvalue().strip(), contents.strip())
 
 if __name__ == "__main__":
     unittest.main()

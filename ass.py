@@ -166,7 +166,7 @@ class ASSFile(object):
         """ Dump this ASS file to a file object.
         """
         f.write(ASSFile.SCRIPT_INFO_HEADER + "\n")
-        for k, v in self.script_info.iteritems():
+        for k, v in self.script_info.items():
             f.write(k + ": " + v + "\n")
         f.write("\n")
 
@@ -292,16 +292,57 @@ class _ASSLineMeta(type):
         return newcls
 
 
-class _ASSLine(object):
-    __metaclass__ = _ASSLineMeta
+def add_metaclass(metaclass):
+    """
+    Decorate a class to replace it with a metaclass-constructed version.
 
+    Usage:
+
+    @add_metaclass(MyMeta)
+    class MyClass(object):
+        ...
+
+    That code produces a class equivalent to
+
+    class MyClass(object, metaclass=MyMeta):
+        ...
+
+    on Python 3 or
+
+    class MyClass(object):
+        __metaclass__ = MyMeta
+
+    on Python 2
+
+    Requires Python 2.6 or later (for class decoration). For use on Python
+    2.5 and earlier, use the legacy syntax:
+
+    class MyClass(object):
+        ...
+    MyClass = add_metaclass(MyClass)
+
+    Taken from six.py.
+    https://bitbucket.org/gutworth/six/src/default/six.py
+    """
+    def wrapper(cls):
+        orig_vars = cls.__dict__.copy()
+        orig_vars.pop('__dict__', None)
+        orig_vars.pop('__weakref__', None)
+        for slots_var in orig_vars.get('__slots__', ()):
+            orig_vars.pop(slots_var)
+        return metaclass(cls.__name__, cls.__bases__, orig_vars)
+    return wrapper
+
+
+@add_metaclass(_ASSLineMeta)
+class _ASSLine(object):
     def __init__(self, *args, **kwargs):
         self.fields = {f.name: f.default for f in self._field_defs}
 
         for k, v in zip(self.DEFAULT_FIELD_ORDER, args):
             self.fields[k] = v
 
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if hasattr(self, k):
                 setattr(self, k, v)
             else:
