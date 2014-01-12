@@ -296,7 +296,7 @@ class _ASSLine(object):
     __metaclass__ = _ASSLineMeta
 
     def __init__(self, *args, **kwargs):
-        self.fields = dict((f.name, f.default) for f in self._field_defs)
+        self.fields = {f.name: f.default for f in self._field_defs}
 
         for k, v in zip(self.DEFAULT_FIELD_ORDER, args):
             self.fields[k] = v
