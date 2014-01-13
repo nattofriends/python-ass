@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'ass',
-    version = '0.2.2',
+    version = '0.3.1',
     description='A library for parsing and manipulating Advanced SubStation Alpha subtitle files.',
     author='Tony Young',
     author_email='tony@rfw.name',
