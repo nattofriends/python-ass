@@ -3,25 +3,28 @@
 from PIL import Image
 import ass
 from datetime import timedelta
+import sys
 
-with open("foo.ass") as f:
+with open("test.ass") as f:
     doc = ass.parse(f)
 
-im_out = Image.new("RGB", (1920, 1080))
+SIZE = (1280, 720)
 
 ctx = ass.renderer.Context()
 
 r = ctx.make_renderer()
 r.set_fonts(fontconfig_config="/usr/local/etc/fonts/fonts.conf")
-r.set_all_sizes(im_out.size)
+r.set_all_sizes(SIZE)
 
-print("loading document...")
+sys.stdout.write("loading document... ")
+sys.stdout.flush()
 t = ctx.document_to_track(doc)
 print("ok! {} styles, {} events".format(t.n_styles, t.n_events))
 
+im_out = Image.new("RGB", SIZE, 0xed9564)
 im_data = im_out.load()
 
-for img in r.render_frame(t, timedelta(0, 58)):
+for img in r.render_frame(t, timedelta(0)):
     if img.w == 0 or img.h == 0:
         continue
 
