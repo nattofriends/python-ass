@@ -3,7 +3,7 @@
 A library for parsing and manipulating Advanced SubStation Alpha subtitle
 files.
 
-## Example
+## Documents
 
 **test.ass**
 
@@ -22,7 +22,7 @@ You can parse the file (duh):
 
     >>> import ass
     >>> with open("test.ass", "r") as f:
-    ...     doc = ass.Document.parse_file(f)
+    ...     doc = ass.document.Document.parse_file(f)
     ...
 
 Now you can access some of its styles:
@@ -51,3 +51,7 @@ Or maybe the whole file:
     >>> with open("out.ass", "w") as f:
     ...     doc.dump_file(f)
     ...
+
+## Rendering
+
+python-ass supports libass for rendering. More about this later.
