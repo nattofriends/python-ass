@@ -1,10 +1,7 @@
 import ctypes
 import ctypes.util
 
-try:
-    from StringIO import StringIO
-except:
-    from io import StringIO
+from io import StringIO
 
 _libass = ctypes.cdll.LoadLibrary(ctypes.util.find_library("ass"))
 
@@ -149,14 +146,15 @@ class Context(object):
 
     def parse_to_track(self, data, codepage="UTF-8"):
         """ Parse ASS data to a track. """
-        ptr = _libass.ass_read_memory(self._ptr, data, len(data), codepage)
+        ptr = _libass.ass_read_memory(self._ptr, data, len(data),
+                                      codepage.encode("utf-8"))
         return Track(self, ptr)
 
     def document_to_track(self, doc):
         """ Convert an ASS document to a track. """
         f = StringIO()
         doc.dump_file(f)
-        return self.parse_to_track(f.getvalue())
+        return self.parse_to_track(f.getvalue().encode("utf-8"))
 
 
 class Renderer(object):
@@ -237,8 +235,15 @@ class Renderer(object):
         if update_fontconfig is None:
             update_fontconfig = fontconfig_config is not None
 
+        if default_font is not None:
+            default_font = default_font.encode("utf-8")
+
+        if default_family is not None:
+            default_family = default_family.encode("utf-8")
+
         _libass.ass_set_fonts(self._ptr, default_font, default_family,
-                              fc, fontconfig_config or "", update_fontconfig)
+                              fc, fontconfig_config.encode("utf-8") or "",
+                              update_fontconfig)
         self._fonts_set = True
 
     def update_fonts(self):
