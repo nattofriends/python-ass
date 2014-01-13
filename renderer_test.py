@@ -10,11 +10,14 @@ with open("test.ass") as f:
 im_out = Image.new("RGB", (500, 500))
 
 ctx = ass.renderer.Context()
+
 r = ctx.make_renderer()
 r.set_fonts(fontconfig_config="/usr/local/etc/fonts/fonts.conf")
 r.set_all_sizes(im_out.size)
 
+print("loading document...")
 t = ctx.document_to_track(doc)
+print("ok! {} styles, {} events".format(t.n_styles, t.n_events))
 
 im_data = im_out.load()
 
@@ -39,16 +42,24 @@ for img in r.render_frame(t, timedelta(0)):
 
     for y in range(img.h):
         for x in range(img.w):
-            r_in, g_in, b_in = im_data[x + img.dst_x, y + img.dst_y]
-            a_in = ord(img.bitmap[sp + x])
+            r_src, g_src, b_src = r / 256., g / 256., b / 256.
+            a_src = ord(img.bitmap[sp + x]) / 256.
 
-            r_out = min(255, r_in + (r * a_in // 256))
-            g_out = min(255, g_in + (g * a_in // 256))
-            b_out = min(255, b_in + (b * a_in // 256))
+            r_dst, g_dst, b_dst = im_data[x + img.dst_x, y + img.dst_y]
+            r_dst /= 256.
+            g_dst /= 256.
+            b_dst /= 256.
 
-            im_data[x + img.dst_x, y + img.dst_y] = (r_out, g_out, b_out)
+            r_out = (r_src * a_src) + (r_dst * (1.0 - a_src))
+            g_out = (g_src * a_src) + (g_dst * (1.0 - a_src))
+            b_out = (b_src * a_src) + (b_dst * (1.0 - a_src))
+
+            im_data[x + img.dst_x, y + img.dst_y] = (
+                int(r_out * 256),
+                int(g_out * 256),
+                int(b_out * 256)
+            )
 
         sp += img.stride
-
 
 im_out.show()

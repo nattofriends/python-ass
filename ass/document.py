@@ -13,6 +13,9 @@ class Color(object):
         self.b = b
         self.a = a
 
+    def to_int(self):
+        return self.a + (self.b << 8) + (self.g << 16) + (self.r << 24)
+
     def to_ass(self):
         """ Convert this color to a Visual Basic (ASS) color code.
         """
@@ -90,6 +93,9 @@ class Document(object):
         for i, line in lines:
             if i == 0 and line[:3] == "\xef\xbb\xbf":
                 line = line[3:]
+
+            if i == 0 and line[0] == u"\ufeff":
+                line = line.strip(u"\ufeff")
 
             if line.lower() == Document.SCRIPT_INFO_HEADER.lower():
                 break
@@ -392,7 +398,7 @@ class Style(_Line):
 
     name = _Field("Name", str, default="Default")
     fontname = _Field("Fontname", str, default="Arial")
-    fontsize = _Field("Fontsize", int, default=20)
+    fontsize = _Field("Fontsize", float, default=20)
     primary_color = _Field("PrimaryColour", Color, default=Color.WHITE)
     secondary_color = _Field("SecondaryColour", Color, default=Color.RED)
     outline_color = _Field("OutlineColour", Color, default=Color.BLACK)
@@ -409,9 +415,9 @@ class Style(_Line):
     outline = _Field("Outline", float, default=2)
     shadow = _Field("Shadow", float, default=2)
     alignment = _Field("Alignment", int, default=2)
-    margin_l = _Field("MarginL", float, default=10)
-    margin_r = _Field("MarginR", float, default=10)
-    margin_v = _Field("MarginV", float, default=10)
+    margin_l = _Field("MarginL", int, default=10)
+    margin_r = _Field("MarginR", int, default=10)
+    margin_v = _Field("MarginV", int, default=10)
     encoding = _Field("Encoding", int, default=1)
 
 
@@ -421,9 +427,9 @@ class _Event(_Line):
     end = _Field("End", timedelta, default=timedelta(0))
     style = _Field("Style", str, default="Default")
     name = _Field("Name", str, default=None)
-    margin_l = _Field("MarginL", float, default=0)
-    margin_r = _Field("MarginR", float, default=0)
-    margin_v = _Field("MarginV", float, default=0)
+    margin_l = _Field("MarginL", int, default=0)
+    margin_r = _Field("MarginR", int, default=0)
+    margin_v = _Field("MarginV", int, default=0)
     effect = _Field("Effect", str, default=None)
     text = _Field("Text", str, default=None)
 
