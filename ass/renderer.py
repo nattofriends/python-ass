@@ -442,13 +442,13 @@ class Track(ctypes.Structure):
 
     @property
     def styles(self):
-        for i in range(self.n_styles):
-            yield self.styles_arr[i]
+        return ctypes.cast(self.styles_arr,
+                           ctypes.POINTER(Style * self.n_styles)).contents
 
     @property
     def events(self):
-        for i in range(self.n_events):
-            yield self.events_arr[i]
+        return ctypes.cast(self.events_arr,
+                           ctypes.POINTER(Event * self.n_events)).contents
 
     def make_style(self):
         style = self.styles_arr[_libass.ass_alloc_style(ctypes.byref(self))]

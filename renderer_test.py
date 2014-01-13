@@ -19,7 +19,7 @@ r.set_all_sizes(SIZE)
 sys.stdout.write("loading document... ")
 sys.stdout.flush()
 t = ctx.document_to_track(doc)
-print("ok! {} styles, {} events".format(t.n_styles, t.n_events))
+print("ok! {} styles, {} events".format(len(t.styles), len(t.events)))
 
 im_out = Image.new("RGB", SIZE, 0xed9564)
 im_data = im_out.load()
