@@ -298,8 +298,6 @@ class Style(ctypes.Structure):
 
     def _after_init(self, track):
         self._track = track
-        self.name = ""
-        self.fontname = ""
 
     def populate(self, style):
         self.name = style.name.encode("utf-8")
