@@ -22,7 +22,7 @@ You can parse the file (duh):
 
     >>> import ass
     >>> with open("test.ass", "r") as f:
-    ...     doc = ass.document.Document.parse_file(f)
+    ...     doc = ass.parse(f)
     ...
 
 Now you can access some of its styles:

@@ -12,7 +12,7 @@ r.set_fonts(fontconfig_config="/usr/local/etc/fonts/fonts.conf")
 r.set_all_sizes(im_out.size)
 
 with open("test.ass") as f:
-    doc = ass.document.Document.parse_file(f)
+    doc = ass.parse(f)
 
 t = ctx.document_to_track(doc)
 

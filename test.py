@@ -13,7 +13,7 @@ class TestEverything(unittest.TestCase):
         with open("test.ass", "r") as f:
             contents = f.read()
 
-        doc = ass.document.Document.parse_file(StringIO(contents))
+        doc = ass.parse(StringIO(contents))
         out = StringIO()
         doc.dump_file(out)
 
