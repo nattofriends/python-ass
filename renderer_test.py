@@ -4,15 +4,15 @@ from PIL import Image
 import ass
 from datetime import timedelta
 
-im_out = Image.new("RGB", (1280, 720))
+with open("test.ass") as f:
+    doc = ass.parse(f)
+
+im_out = Image.new("RGB", (500, 500))
 
 ctx = ass.renderer.Context()
 r = ctx.make_renderer()
 r.set_fonts(fontconfig_config="/usr/local/etc/fonts/fonts.conf")
 r.set_all_sizes(im_out.size)
-
-with open("test.ass") as f:
-    doc = ass.parse(f)
 
 t = ctx.document_to_track(doc)
 
