@@ -383,7 +383,7 @@ class Event(ctypes.Structure):
 
     @property
     def style(self):
-        return self._track.styles_arr[self.style_id].name
+        return self._track.styles[self.style_id].name
 
     @style.setter
     def style(self, v):
