@@ -13,9 +13,9 @@ class TestEverything(unittest.TestCase):
         with open("test.ass", "r") as f:
             contents = f.read()
 
-        af = ass.ASSFile.parse_file(StringIO(contents))
+        doc = ass.document.Document.parse_file(StringIO(contents))
         out = StringIO()
-        af.dump_file(out)
+        doc.dump_file(out)
 
         self.assertEqual(out.getvalue().strip(), contents.strip())
 

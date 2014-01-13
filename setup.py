@@ -2,12 +2,12 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'ass',
-    version = '0.1.1',
+    version = '0.2.1',
     description='Advanced SubStation Alpha subtitle format parsing.',
     author='Tony Young',
     author_email='tony@rfw.name',
     keywords='ass subtitle substation alpha',
-    py_modules = ['ass'],
+    packages = ['ass'],
     url = 'http://github.com/rfw/python-ass',
     license = 'MIT',
     classifiers = [
