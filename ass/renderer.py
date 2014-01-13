@@ -1,7 +1,10 @@
 import ctypes
 import ctypes.util
 
-from io import StringIO
+try:
+    from StringIO import StringIO
+except:
+    from io import StringIO
 
 _libass = ctypes.cdll.LoadLibrary(ctypes.util.find_library("ass"))
 
