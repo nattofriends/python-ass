@@ -4,7 +4,7 @@ import ctypes.util
 from datetime import timedelta
 
 _libass = ctypes.cdll.LoadLibrary(ctypes.util.find_library("ass"))
-
+_libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("c"))
 
 class ImageSequence(object):
     def __init__(self, renderer, head_ptr):
@@ -298,6 +298,8 @@ class Style(ctypes.Structure):
 
     def _after_init(self, track):
         self._track = track
+        self.name = ""
+        self.fontname = ""
 
     def populate(self, style):
         self.name = style.name.encode("utf-8")
@@ -440,9 +442,14 @@ class Track(ctypes.Structure):
         return event
 
     def __del__(self):
-        return
-        _libass.ass_free_track(ctypes.byref(self))
+        # XXX: we can't use ass_free_track because it assumes we've allocated
+        #      our strings in the heap (wat), so we just free them with libc.
+        _libc.free(self.styles_arr)
+        _libc.free(self.events_arr)
+        _libc.free(ctypes.byref(self))
 
+
+_libc.free.argtypes = [ctypes.c_void_p]
 
 _libass.ass_library_init.restype = ctypes.POINTER(Context)
 
@@ -455,8 +462,6 @@ _libass.ass_renderer_done.argtypes = [ctypes.POINTER(Renderer)]
 
 _libass.ass_new_track.argtypes = [ctypes.POINTER(Context)]
 _libass.ass_new_track.restype = ctypes.POINTER(Track)
-
-_libass.ass_free_track.argtypes = [ctypes.POINTER(Track)]
 
 _libass.ass_set_style_overrides.argtypes = [
     ctypes.POINTER(Context),
@@ -493,6 +498,3 @@ _libass.ass_alloc_style.restype = ctypes.c_int
 
 _libass.ass_alloc_event.argtypes = [ctypes.POINTER(Track)]
 _libass.ass_alloc_event.restype = ctypes.c_int
-
-_libass.ass_free_style.argtypes = [ctypes.POINTER(Track), ctypes.c_int]
-_libass.ass_free_event.argtypes = [ctypes.POINTER(Track), ctypes.c_int]
