@@ -18,26 +18,26 @@ files.
     Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     Dialogue: 0,0:00:00.00,0:00:05.00,Default,,0,0,0,,hello!
 
-You can parse the file (duh):
+You can parse the file:
 
     >>> import ass
     >>> with open("test.ass", "r") as f:
     ...     doc = ass.parse(f)
     ...
 
-Now you can access some of its styles:
+Access some of its styles:
 
     >>> doc.styles
-    [<ass.Style object at ...>]
+    [<ass.document.Style object at ...>]
     >>> doc.styles[0].fontname
     'Arial'
     >>> doc.styles[0].primary_color  # "color", not "colour"
     Color(r=0xff, g=0xff, b=0xff, a=0x00)
 
-And its event lines:
+Or its event lines:
 
     >>> doc.events
-    [<ass.Dialogue object at ...>]
+    [<ass.document.Dialogue object at ...>]
     >>> doc.events[0].text
     'hello!'
 
@@ -54,4 +54,38 @@ Or maybe the whole file:
 
 ## Rendering
 
-python-ass supports libass for rendering. More about this later.
+python-ass can use libass for rendering.
+
+You need to convert `ass.document.Document` to `ass.renderer.Track` first:
+
+    >>> ctx = ass.renderer.Context()
+    >>> t = ctx.document_to_track(doc)
+
+Then make a renderer to render the track:
+
+    >>> r = ctx.make_renderer()
+    >>> r.set_fonts(fontconfig_config="/usr/local/etc/fonts/fonts.conf")
+    >>> r.set_all_sizes((1280, 720))
+
+You can render a frame at a given time:
+
+    >>> imgs = r.render_frame(t, timedelta(0))
+
+Example using PIL to render to a bitmap:
+
+    >>> im_out = Image.new("RGB", (1280, 720))
+    >>> im_data = im_out.load()
+    >>> for img in imgs:
+    ...     r, g, b, a = img.rgba
+    ...     for y in range(img.h):
+    ...         for x in range(img.w):
+    ...             a_src = img[x, y] * (256 - a) // 256
+    ...             r_dst, g_dst, b_dst = im_data[x + img.dst_x, y + img.dst_y]
+    ...             r_out = ((r * a_src) + (r_dst * (256 - a_src))) // 256
+    ...             g_out = ((g * a_src) + (g_dst * (256 - a_src))) // 256
+    ...             b_out = ((b * a_src) + (b_dst * (256 - a_src))) // 256
+    ...             im_data[x + img.dst_x, y + img.dst_y] = (r_out, g_out, b_out)
+    ...
+    >>> im_out.show()
+
+![Test rendering](test.png)

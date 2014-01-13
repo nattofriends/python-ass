@@ -25,44 +25,17 @@ im_out = Image.new("RGB", SIZE, 0xed9564)
 im_data = im_out.load()
 
 for img in r.render_frame(t, timedelta(0)):
-    if img.w == 0 or img.h == 0:
-        continue
-
-    sp = 0
-
-    color = img.color
-
-    a = color & 0xff
-    color >>= 8
-
-    b = color & 0xff
-    color >>= 8
-
-    g = color & 0xff
-    color >>= 8
-
-    r = color & 0xff
+    r, g, b, a = img.rgba
 
     for y in range(img.h):
         for x in range(img.w):
-            r_src, g_src, b_src = r / 256., g / 256., b / 256.
-            a_src = ord(img.bitmap[sp + x]) / 256. * (1.0 - a / 256.)
-
+            a_src = img[x, y] * (256 - a) // 256
             r_dst, g_dst, b_dst = im_data[x + img.dst_x, y + img.dst_y]
-            r_dst /= 256.
-            g_dst /= 256.
-            b_dst /= 256.
-
-            r_out = (r_src * a_src) + (r_dst * (1.0 - a_src))
-            g_out = (g_src * a_src) + (g_dst * (1.0 - a_src))
-            b_out = (b_src * a_src) + (b_dst * (1.0 - a_src))
-
-            im_data[x + img.dst_x, y + img.dst_y] = (
-                int(r_out * 256),
-                int(g_out * 256),
-                int(b_out * 256)
-            )
-
-        sp += img.stride
+            r_out = ((r * a_src) + (r_dst * (256 - a_src))) // 256
+            g_out = ((g * a_src) + (g_dst * (256 - a_src))) // 256
+            b_out = ((b * a_src) + (b_dst * (256 - a_src))) // 256
+            im_data[x + img.dst_x, y + img.dst_y] = (r_out, g_out, b_out)
 
 im_out.show()
+
+im_out.save("test.png")

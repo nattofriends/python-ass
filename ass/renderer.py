@@ -23,6 +23,27 @@ class Image(ctypes.Structure):
     TYPE_OUTLINE = 1
     TYPE_SHADOW = 2
 
+    @property
+    def rgba(self):
+        color = self.color
+
+        a = color & 0xff
+        color >>= 8
+
+        b = color & 0xff
+        color >>= 8
+
+        g = color & 0xff
+        color >>= 8
+
+        r = color & 0xff
+
+        return (r, g, b, a)
+
+    def __getitem__(self, loc):
+        x, y = loc
+        return ord(self.bitmap[y * self.stride + x])
+
 
 Image._fields_ = [
     ("w", ctypes.c_int),
