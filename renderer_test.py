@@ -4,10 +4,10 @@ from PIL import Image
 import ass
 from datetime import timedelta
 
-with open("test.ass") as f:
+with open("foo.ass") as f:
     doc = ass.parse(f)
 
-im_out = Image.new("RGB", (500, 500))
+im_out = Image.new("RGB", (1920, 1080))
 
 ctx = ass.renderer.Context()
 
@@ -21,7 +21,7 @@ print("ok! {} styles, {} events".format(t.n_styles, t.n_events))
 
 im_data = im_out.load()
 
-for img in r.render_frame(t, timedelta(0)):
+for img in r.render_frame(t, timedelta(0, 58)):
     if img.w == 0 or img.h == 0:
         continue
 
@@ -43,7 +43,7 @@ for img in r.render_frame(t, timedelta(0)):
     for y in range(img.h):
         for x in range(img.w):
             r_src, g_src, b_src = r / 256., g / 256., b / 256.
-            a_src = ord(img.bitmap[sp + x]) / 256.
+            a_src = ord(img.bitmap[sp + x]) / 256. * (1.0 - a / 256.)
 
             r_dst, g_dst, b_dst = im_data[x + img.dst_x, y + img.dst_y]
             r_dst /= 256.
