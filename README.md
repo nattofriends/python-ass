@@ -56,10 +56,14 @@ Or maybe the whole file:
 
 python-ass can use libass for rendering.
 
-You need to convert `ass.document.Document` to `ass.renderer.Track` first:
+First you need to allocate a libass context:
 
     >>> ctx = ass.renderer.Context()
-    >>> t = ctx.document_to_track(doc)
+
+Then you need to convert the `ass.document.Document` to a `ass.renderer.Track`:
+
+    >>> t = ctx.make_track()
+    >>> t.populate(doc)
 
 Then make a renderer to render the track:
 
@@ -87,5 +91,7 @@ Example using PIL to render to a bitmap:
     ...             im_data[x + img.dst_x, y + img.dst_y] = (r_out, g_out, b_out)
     ...
     >>> im_out.show()
+
+### Sample Rendering (from `renderer_test.py`)
 
 ![Test rendering](test.png)

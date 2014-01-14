@@ -136,30 +136,6 @@ class Context(ctypes.Structure):
         return _libass.ass_read_memory(ctypes.byref(self), data, len(data),
                                        codepage.encode("utf-8")).contents
 
-    def document_to_track(self, doc):
-        """ Convert an ASS document to a track. """
-        track = self.make_track()
-
-        track.type = Track.TYPE_ASS
-
-        track.play_res_x = int(doc.script_info.get("PlayResX", 640))
-        track.play_res_y = int(doc.script_info.get("PlayResY", 480))
-
-        track.style_format = ", ".join(doc.styles_field_order).encode("utf-8")
-        track.event_format = ", ".join(doc.events_field_order).encode("utf-8")
-
-        for d_style in doc.styles:
-            style = track.make_style()
-            style.populate(d_style)
-
-        for d_event in doc.events:
-            if d_event.TYPE != "Dialogue":
-                continue
-            event = track.make_event()
-            event.populate(d_event)
-
-        return track
-
     def make_track(self):
         track = _libass.ass_new_track(ctypes.byref(self)).contents
         track._after_init(self)
@@ -470,6 +446,29 @@ class Track(ctypes.Structure):
         _libc.free(self.styles_arr)
         _libc.free(self.events_arr)
         _libc.free(ctypes.byref(self))
+
+    def populate(self, doc):
+        """ Convert an ASS document to a track. """
+        self.type = Track.TYPE_ASS
+
+        self.play_res_x = doc.play_res_x
+        self.play_res_y = doc.play_res_y
+        self.wrap_style = doc.wrap_style
+        self.scaled_border_and_shadow = doc.scaled_border_and_shadow.lower() == \
+                                        "yes"
+
+        self.style_format = ", ".join(doc.styles_field_order).encode("utf-8")
+        self.event_format = ", ".join(doc.events_field_order).encode("utf-8")
+
+        for d_style in doc.styles:
+            style = self.make_style()
+            style.populate(d_style)
+
+        for d_event in doc.events:
+            if d_event.TYPE != "Dialogue":
+                continue
+            event = self.make_event()
+            event.populate(d_event)
 
 
 _libc.free.argtypes = [ctypes.c_void_p]

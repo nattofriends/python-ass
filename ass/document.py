@@ -1,5 +1,5 @@
 from datetime import timedelta
-from collections import OrderedDict
+import itertools
 
 
 class Color(object):
@@ -58,141 +58,6 @@ Color.RED = Color(255, 0, 0)
 Color.BLACK = Color(0, 0, 0)
 
 
-class Document(object):
-    """ An ASS document. """
-    SCRIPT_INFO_HEADER = "[Script Info]"
-    STYLE_SSA_HEADER = "[V4 Styles]"
-    STYLE_ASS_HEADER = "[V4+ Styles]"
-    EVENTS_HEADER = "[Events]"
-
-    FORMAT_TYPE = "Format"
-
-    def __init__(self):
-        """ Create an empty ASS document.
-        """
-        self.script_info = OrderedDict()
-
-        self.styles = []
-        self.styles_field_order = Style.DEFAULT_FIELD_ORDER
-
-        self.events = []
-        self.events_field_order = _Event.DEFAULT_FIELD_ORDER
-
-    @classmethod
-    def parse_file(cls, f):
-        """ Parse an ASS document from a file object.
-        """
-        doc = cls()
-
-        lines = ((i, line)
-                 for i, line in ((i, line.rstrip("\r\n"))
-                                 for i, line in enumerate(f))
-                 if line and line[0] != ";")
-
-        # [Script Info]
-        for i, line in lines:
-            if i == 0 and line[:3] == "\xef\xbb\xbf":
-                line = line[3:]
-
-            if i == 0 and line[0] == u"\ufeff":
-                line = line.strip(u"\ufeff")
-
-            if line.lower() == Document.SCRIPT_INFO_HEADER.lower():
-                break
-
-            raise ValueError("expected script info header")
-
-        # k: v
-        for i, line in lines:
-            if line.lower() == Document.STYLE_ASS_HEADER.lower() or \
-               line.lower() == Document.STYLE_SSA_HEADER.lower():
-               break
-
-            k, v = line.split(":", 1)
-            v = v.lstrip()
-
-            doc.script_info[k] = v
-
-        # [V4 Styles]
-        i, line = next(lines)
-
-        type_name, line = line.split(":", 1)
-        line = line.lstrip()
-
-        # Format: ...
-        if type_name.lower() != Document.FORMAT_TYPE.lower():
-            raise ValueError("expected format line in styles")
-
-        field_order = [x.strip() for x in line.split(",")]
-        doc.styles_field_order = field_order
-
-        # Style: ...
-        for i, line in lines:
-            if line.lower() == Document.EVENTS_HEADER.lower():
-                break
-
-            type_name, line = line.split(":", 1)
-            line = line.lstrip()
-
-            if type_name.lower() != Style.TYPE.lower():
-                raise ValueError("expected style line in styles")
-
-            doc.styles.append(Style.parse(line, field_order))
-
-        # [Events]
-        i, line = next(lines)
-
-        type_name, line = line.split(":", 1)
-        line = line.lstrip()
-
-        # Format: ...
-        if type_name.lower() != Document.FORMAT_TYPE.lower():
-            raise ValueError("expected format line in events")
-
-        field_order = [x.strip() for x in line.split(",")]
-        doc.events_field_order = field_order
-
-        # Dialogue: ...
-        # Comment: ...
-        # etc.
-        for i, line in lines:
-            type_name, line = line.split(":", 1)
-            line = line.lstrip()
-
-            doc.events.append(({
-                "Dialogue": Dialogue,
-                "Comment":  Comment,
-                "Picture":  Picture,
-                "Sound":    Sound,
-                "Movie":    Movie,
-                "Command":  Command
-            })[type_name].parse(line, field_order))
-
-        return doc
-
-    def dump_file(self, f):
-        """ Dump this ASS document to a file object.
-        """
-        f.write(Document.SCRIPT_INFO_HEADER + "\n")
-        for k, v in self.script_info.items():
-            f.write(k + ": " + v + "\n")
-        f.write("\n")
-
-        f.write(Document.STYLE_ASS_HEADER + "\n")
-        f.write(Document.FORMAT_TYPE +  ": " +
-                ", ".join(self.styles_field_order) + "\n")
-        for style in self.styles:
-            f.write(style.dump_with_type(self.styles_field_order) + "\n")
-        f.write("\n")
-
-        f.write(Document.EVENTS_HEADER + "\n")
-        f.write(Document.FORMAT_TYPE +  ": " +
-                ", ".join(self.events_field_order) + "\n")
-        for event in self.events:
-            f.write(event.dump_with_type(self.events_field_order) + "\n")
-        f.write("\n")
-
-
 class _Field(object):
     _last_creation_order = -1
 
@@ -207,11 +72,7 @@ class _Field(object):
     def __get__(self, obj, type=None):
         if obj is None:
             return self
-
-        try:
-            return obj.fields[self.name]
-        except KeyError:
-            return None
+        return obj.fields.get(self.name, self.default)
 
     def __set__(self, obj, v):
         obj.fields[self.name] = v
@@ -275,7 +136,7 @@ class _Field(object):
         return timedelta(seconds=r)
 
 
-class _LineMeta(type):
+class _WithFieldMeta(type):
     def __new__(cls, name, bases, dct):
         newcls = type.__new__(cls, name, bases, dct)
 
@@ -342,7 +203,161 @@ def add_metaclass(metaclass):
     return wrapper
 
 
-@add_metaclass(_LineMeta)
+@add_metaclass(_WithFieldMeta)
+class Document(object):
+    """ An ASS document. """
+    SCRIPT_INFO_HEADER = "[Script Info]"
+    STYLE_SSA_HEADER = "[V4 Styles]"
+    STYLE_ASS_HEADER = "[V4+ Styles]"
+    EVENTS_HEADER = "[Events]"
+
+    FORMAT_TYPE = "Format"
+
+    VERSION_ASS = "v4.00+"
+    VERSION_SSA = "v4.00"
+
+    script_type = _Field("ScriptType", str, default=VERSION_ASS)
+    play_res_x = _Field("PlayResX", int, default=640)
+    play_res_y = _Field("PlayResY", int, default=480)
+    wrap_style = _Field("WrapStyle", int, default=0)
+    scaled_border_and_shadow = _Field("ScaledBorderAndShadow", str,
+                                      default="yes")
+
+    def __init__(self):
+        """ Create an empty ASS document.
+        """
+        self.fields = {}
+
+        self.styles = []
+        self.styles_field_order = Style.DEFAULT_FIELD_ORDER
+
+        self.events = []
+        self.events_field_order = _Event.DEFAULT_FIELD_ORDER
+
+    @classmethod
+    def parse_file(cls, f):
+        """ Parse an ASS document from a file object.
+        """
+        doc = cls()
+
+        lines = ((i, line)
+                 for i, line in ((i, line.rstrip("\r\n"))
+                                 for i, line in enumerate(f))
+                 if line and line[0] != ";")
+
+        # [Script Info]
+        for i, line in lines:
+            if i == 0 and line[:3] == "\xef\xbb\xbf":
+                line = line[3:]
+
+            if i == 0 and line[0] == u"\ufeff":
+                line = line.strip(u"\ufeff")
+
+            if line.lower() == Document.SCRIPT_INFO_HEADER.lower():
+                break
+
+            raise ValueError("expected script info header")
+
+        # field_name: field
+        for i, line in lines:
+            if (doc.script_type.lower() == doc.VERSION_ASS.lower() and
+                line.lower() == Document.STYLE_ASS_HEADER.lower()) or \
+               (doc.script_type.lower() == doc.VERSION_SSA.lower() and
+                line.lower() == Document.STYLE_SSA_HEADER.lower()):
+               break
+
+            field_name, field = line.split(":", 1)
+            field = field.lstrip()
+
+            if field_name in Document._field_mappings:
+                field = Document._field_mappings[field_name].parse(field)
+
+            doc.fields[field_name] = field
+
+        # [V4 Styles]
+        i, line = next(lines)
+
+        type_name, line = line.split(":", 1)
+        line = line.lstrip()
+
+        # Format: ...
+        if type_name.lower() != Document.FORMAT_TYPE.lower():
+            raise ValueError("expected format line in styles")
+
+        field_order = [x.strip() for x in line.split(",")]
+        doc.styles_field_order = field_order
+
+        # Style: ...
+        for i, line in lines:
+            if line.lower() == Document.EVENTS_HEADER.lower():
+                break
+
+            type_name, line = line.split(":", 1)
+            line = line.lstrip()
+
+            if type_name.lower() != Style.TYPE.lower():
+                raise ValueError("expected style line in styles")
+
+            doc.styles.append(Style.parse(line, field_order))
+
+        # [Events]
+        i, line = next(lines)
+
+        type_name, line = line.split(":", 1)
+        line = line.lstrip()
+
+        # Format: ...
+        if type_name.lower() != Document.FORMAT_TYPE.lower():
+            raise ValueError("expected format line in events")
+
+        field_order = [x.strip() for x in line.split(",")]
+        doc.events_field_order = field_order
+
+        # Dialogue: ...
+        # Comment: ...
+        # etc.
+        for i, line in lines:
+            type_name, line = line.split(":", 1)
+            line = line.lstrip()
+
+            doc.events.append(({
+                "Dialogue": Dialogue,
+                "Comment":  Comment,
+                "Picture":  Picture,
+                "Sound":    Sound,
+                "Movie":    Movie,
+                "Command":  Command
+            })[type_name].parse(line, field_order))
+
+        return doc
+
+    def dump_file(self, f):
+        """ Dump this ASS document to a file object.
+        """
+        f.write(Document.SCRIPT_INFO_HEADER + "\n")
+        for k in itertools.chain((field for field in self.DEFAULT_FIELD_ORDER
+                                  if field in self.fields),
+                                 (field for field in self.fields
+                                  if field not in self._field_mappings)):
+            f.write(k + ": " + _Field.dump(self.fields[k]) + "\n")
+        f.write("\n")
+
+        f.write(Document.STYLE_ASS_HEADER + "\n")
+        f.write(Document.FORMAT_TYPE +  ": " +
+                ", ".join(self.styles_field_order) + "\n")
+        for style in self.styles:
+            f.write(style.dump_with_type(self.styles_field_order) + "\n")
+        f.write("\n")
+
+        f.write(Document.EVENTS_HEADER + "\n")
+        f.write(Document.FORMAT_TYPE +  ": " +
+                ", ".join(self.events_field_order) + "\n")
+        for event in self.events:
+            f.write(event.dump_with_type(self.events_field_order) + "\n")
+        f.write("\n")
+
+
+@add_metaclass(_WithFieldMeta)
 class _Line(object):
     def __init__(self, *args, **kwargs):
         self.fields = {f.name: f.default for f in self._field_defs}
@@ -386,7 +401,9 @@ class _Line(object):
         fields = {}
 
         for field_name, field in zip(field_order, parts):
-            fields[field_name] = cls._field_mappings[field_name].parse(field)
+            if field_name in cls._field_mappings:
+                field = cls._field_mappings[field_name].parse(field)
+            fields[field_name] = field
 
         return cls(**fields)
 
