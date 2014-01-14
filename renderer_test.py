@@ -35,7 +35,7 @@ doc.events.append(ass.document.Dialogue(
 doc.events.append(ass.document.Dialogue(
     start=timedelta(0),
     end=timedelta(milliseconds=1),
-    margin_v=int(1 * DPI * SCALE),
+    margin_v=int(1.5 * DPI * SCALE),
     style="Default",
     text="""
 {\\fs72}Lorem Ipsum{\\r}
