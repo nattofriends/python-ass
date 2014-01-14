@@ -16,19 +16,30 @@ doc.styles.append(ass.document.Style(
     outline=0,
     alignment=7,
     bold=False,
-    fontname="Garamond",
-    fontsize=13 * SCALE,
     margin_l=int(1.25 * DPI * SCALE),
     margin_r=int(1.25 * DPI * SCALE),
-    margin_v=int(1 * DPI * SCALE),
+    margin_v=0,
+    fontname="Garamond",
+    fontsize=13 * SCALE,
     primary_color=ass.document.Color.BLACK
 ))
 
 doc.events.append(ass.document.Dialogue(
     start=timedelta(0),
     end=timedelta(milliseconds=1),
+    margin_v=int(0.5 * DPI * SCALE),
+    style="Default",
+    text="{\\an2}- 1 -"
+))
+
+doc.events.append(ass.document.Dialogue(
+    start=timedelta(0),
+    end=timedelta(milliseconds=1),
+    margin_v=int(1 * DPI * SCALE),
     style="Default",
     text="""
+{\\fs72}Lorem Ipsum{\\r}
+
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras adipiscing leo
 nec lorem vulputate gravida. Maecenas vitae sodales elit. Fusce eget malesuada
 neque, sed imperdiet mi. Etiam vel urna aliquam, aliquet nunc et, bibendum leo.
@@ -83,14 +94,6 @@ Nam id urna et nunc tempus auctor. Nullam nec ornare justo. Fusce auctor
 viverra nibh, vitae sodales leo lacinia at. Quisque sed nisi nibh. Aliquam
 pellentesque ligula id orci auctor convallis. Etiam et nisl sagittis,
 malesuada enim sit amet, malesuada ante.
-
-Vestibulum vel congue elit, faucibus lobortis nisi. Mauris vestibulum vel metus
-id mollis. Ut cursus eleifend orci sed molestie. Vivamus sit amet consectetur
-risus, vitae vestibulum justo. Nam ac vestibulum urna, at sollicitudin nisl.
-Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac
-turpis egestas. Cras suscipit tortor tellus, eget venenatis magna euismod sit
-amet. Aliquam enim nibh, consequat sed adipiscing quis, vulputate cursus
-turpis. Aenean sed vehicula enim, at auctor ligula.
 """.strip().replace("\n\n", "\\N\\N").replace("\n", " ")))
 
 SIZE = (int(8.5 * DPI * SCALE), int(11 * DPI * SCALE))
