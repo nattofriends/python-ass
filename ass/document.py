@@ -426,12 +426,12 @@ class _Event(_Line):
     start = _Field("Start", timedelta, default=timedelta(0))
     end = _Field("End", timedelta, default=timedelta(0))
     style = _Field("Style", str, default="Default")
-    name = _Field("Name", str, default=None)
+    name = _Field("Name", str, default="")
     margin_l = _Field("MarginL", int, default=0)
     margin_r = _Field("MarginR", int, default=0)
     margin_v = _Field("MarginV", int, default=0)
-    effect = _Field("Effect", str, default=None)
-    text = _Field("Text", str, default=None)
+    effect = _Field("Effect", str, default="")
+    text = _Field("Text", str, default="")
 
 
 class Dialogue(_Event):

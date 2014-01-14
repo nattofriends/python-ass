@@ -442,11 +442,15 @@ class Track(ctypes.Structure):
 
     @property
     def styles(self):
+        if self.n_styles == 0:
+            return []
         return ctypes.cast(self.styles_arr,
                            ctypes.POINTER(Style * self.n_styles)).contents
 
     @property
     def events(self):
+        if self.n_events == 0:
+            return []
         return ctypes.cast(self.events_arr,
                            ctypes.POINTER(Event * self.n_events)).contents
 
