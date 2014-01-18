@@ -203,6 +203,30 @@ def add_metaclass(metaclass):
     return wrapper
 
 
+class Tag(object):
+    """ A tag in ASS, e.g. {\\b1}. Multiple can be used like {\\b1\\i1}. """
+    def __init__(self, name, params):
+        self.name = name
+        self.param = params
+
+    def dump(self):
+        if not self.params:
+            params = ""
+        elif len(self.params) == 1:
+            params = params[0]
+        else:
+            params = "(" + \
+                     ",".join(_Field.dump(param) for param in self.params) + \
+                     ")"
+
+        return "\\{name}{params}".format(name=self.name, params=params)
+
+
+    @classmethod
+    def parse(cls, part):
+        raise NotImplementedError
+
+
 @add_metaclass(_WithFieldMeta)
 class Document(object):
     """ An ASS document. """
@@ -455,6 +479,57 @@ class Dialogue(_Event):
     """ A dialog event.
     """
     TYPE = "Dialogue"
+
+    def parse(self):
+        parts = []
+
+        current = []
+
+        backslash = False
+
+        it = iter(self.text)
+
+        for c in it:
+            if backslash:
+                if c == "{":
+                    current.append(c)
+                else:
+                    current.append("\\" + c)
+                backslash = False
+            elif c == "{":
+                if current:
+                    parts.append("".join(current))
+
+                current = []
+
+                tag_part = []
+
+                for c2 in it:
+                    if c2 == "}":
+                        break
+                    tag_part.append(c2)
+
+                parts.append(Tag.parse("".join(tag_part)))
+            elif c == "\\":
+                backslash = True
+            else:
+                current.append(c)
+
+        if backslash:
+            current.append("\\")
+
+        if current:
+            parts.append("".join(current))
+
+        return parts
+
+    def strip_tags(self):
+        return "".join(n for n in self.parse() if not isinstance(n, Tag))
+
+    def unparse(self, parts):
+        self.text = "".join(n.dump() if isinstance(n, Tag)
+                            else n
+                            for n in parts)
 
 
 class Comment(_Event):
