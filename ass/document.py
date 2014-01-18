@@ -205,11 +205,12 @@ def add_metaclass(metaclass):
 
 class Tag(object):
     """ A tag in ASS, e.g. {\\b1}. Multiple can be used like {\\b1\\i1}. """
+
     def __init__(self, name, params):
         self.name = name
         self.param = params
 
-    def dump(self):
+    def to_ass(self):
         if not self.params:
             params = ""
         elif len(self.params) == 1:
@@ -244,7 +245,7 @@ class Tag(object):
         return "".join(text_parts)
 
     @classmethod
-    def parse(cls, s):
+    def from_ass(cls, s):
         raise NotImplementedError
 
 
@@ -530,7 +531,7 @@ class Dialogue(_Event):
                         break
                     tag_part.append(c2)
 
-                parts.append(Tag.parse("".join(tag_part)))
+                parts.append(Tag.from_ass("".join(tag_part)))
             elif c == "\\":
                 backslash = True
             else:
