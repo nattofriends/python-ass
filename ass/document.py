@@ -222,8 +222,29 @@ class Tag(object):
         return "\\{name}{params}".format(name=self.name, params=params)
 
 
+    @staticmethod
+    def strip_tags(parts, keep_drawing_commands=False):
+        text_parts = []
+
+        it = iter(parts)
+
+        for part in it:
+            if isinstance(part, Tag):
+                # if we encounter a \p1 tag, skip everything until we get to
+                # \p0
+                if not keep_drawing_commands and part.name == "p" and \
+                   part.params == [1]:
+                    for part2 in it:
+                        if isinstance(part2, Tag) and part2.name == "p" and \
+                           part2.params == [0]:
+                           break
+            else:
+                text_parts.append(part)
+
+        return "".join(text_parts)
+
     @classmethod
-    def parse(cls, part):
+    def parse(cls, s):
         raise NotImplementedError
 
 
@@ -523,25 +544,8 @@ class Dialogue(_Event):
 
         return parts
 
-    def strip_tags(self, keep_drawing_commands=False):
-        text_parts = []
-
-        it = iter(self.parse())
-
-        for part in it:
-            if isinstance(part, Tag):
-                # if we encounter a \p1 tag, skip everything until we get to
-                # \p0
-                if not keep_drawing_commands and part.name == "p" and \
-                   part.params == [1]:
-                    for part2 in it:
-                        if isinstance(part2, Tag) and part2.name == "p" and \
-                           part2.params == [0]:
-                           break
-            else:
-                text_parts.append(part)
-
-        return "".join(text_parts)
+    def tags_stripped(self):
+        return Tag.strip_tags(self.parse())
 
     def unparse(self, parts):
         self.text = "".join(n.dump() if isinstance(n, Tag)
