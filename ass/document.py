@@ -502,57 +502,6 @@ class Dialogue(_Event):
     """
     TYPE = "Dialogue"
 
-    def parse(self):
-        parts = []
-
-        current = []
-
-        backslash = False
-
-        it = iter(self.text)
-
-        for c in it:
-            if backslash:
-                if c == "{":
-                    current.append(c)
-                else:
-                    current.append("\\" + c)
-                backslash = False
-            elif c == "{":
-                if current:
-                    parts.append("".join(current))
-
-                current = []
-
-                tag_part = []
-
-                for c2 in it:
-                    if c2 == "}":
-                        break
-                    tag_part.append(c2)
-
-                parts.append(Tag.from_ass("".join(tag_part)))
-            elif c == "\\":
-                backslash = True
-            else:
-                current.append(c)
-
-        if backslash:
-            current.append("\\")
-
-        if current:
-            parts.append("".join(current))
-
-        return parts
-
-    def tags_stripped(self):
-        return Tag.strip_tags(self.parse())
-
-    def unparse(self, parts):
-        self.text = "".join(n.dump() if isinstance(n, Tag)
-                            else n
-                            for n in parts)
-
 
 class Comment(_Event):
     """ A comment event.
