@@ -299,6 +299,9 @@ class Document(object):
             if i == 0 and line[0] == u"\ufeff":
                 line = line.strip(u"\ufeff")
 
+            if line[0] == ";":
+                continue
+
             if line.lower() == Document.SCRIPT_INFO_HEADER.lower():
                 break
 
